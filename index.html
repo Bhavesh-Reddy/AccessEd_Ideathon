@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AccessEd – Floating Auth</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --center-start: 25%;
+  --gap: 85px;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:'Segoe UI',Tahoma,Verdana,sans-serif;
+  margin:0;
+  padding:0;
+}
+
+body{
+  margin:0;
+  height:100vh;
+  background:radial-gradient(circle at center,#ffffff 0%,#c7d2fe 35%,#020617 100%);
+  overflow:hidden;
+  perspective:1600px;
+  position:relative;
+  transition:background 1s ease;
+}
+
+/* ===== ANIMATED PARTICLES ===== */
+.particle{
+  position:absolute;
+  width:3px;
+  height:3px;
+  background:rgba(228, 212, 212, 0.8);
+  border-radius:50%;
+  animation:particleFloat 15s infinite ease-in-out;
+  box-shadow:0 0 8px rgba(255,255,255,0.6);
+}
+
+@keyframes particleFloat{
+  0%, 100%{ transform:translate(0, 0) scale(1); opacity:0.4; }
+  25%{ transform:translate(80px, -120px) scale(1.5); opacity:0.8; }
+  50%{ transform:translate(-60px, -80px) scale(1); opacity:0.6; }
+  75%{ transform:translate(100px, -150px) scale(1.3); opacity:0.7; }
+}
+
+/* ===== FLOATING SHAPES ===== */
+.shape{
+  position:absolute;
+  opacity:0.2;
+  animation:shapeFloat 20s infinite ease-in-out;
+  pointer-events:none;
+  border:2px solid rgba(255,255,255,0.3);
+}
+
+.shape.circle{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+}
+
+.shape.square{
+  width:50px;
+  height:50px;
+  transform:rotate(45deg);
+}
+
+@keyframes shapeFloat{
+  0%, 100%{ transform:translate(0, 0) rotate(0deg) scale(1); }
+  33%{ transform:translate(120px, -100px) rotate(120deg) scale(1.2); }
+  66%{ transform:translate(-80px, 60px) rotate(240deg) scale(0.9); }
+}
+
+/* ===== GRID OVERLAY ===== */
+.grid-overlay{
+  position:fixed;
+  width:100%;
+  height:100%;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size:40px 40px;
+  animation:gridMove 15s linear infinite;
+  pointer-events:none;
+}
+
+@keyframes gridMove{
+  0%{ transform:translate(0, 0); }
+  100%{ transform:translate(40px, 40px); }
+}
+
+/* ===== DISABILITY THEMES ===== */
+body.visual-impairment{
+  background:radial-gradient(circle at center,#fffbeb 0%,#fef3c7 35%,#854d0e 100%);
+}
+
+body.hearing-impairment{
+  background:radial-gradient(circle at center,#f0fdfa 0%,#ccfbf1 35%,#134e4a 100%);
+}
+
+body.motor-disability{
+  background:radial-gradient(circle at center,#fef2f2 0%,#fecaca 35%,#7f1d1d 100%);
+}
+
+body.cognitive-disability{
+  background:radial-gradient(circle at center,#faf5ff 0%,#e9d5ff 35%,#581c87 100%);
+}
+
+body.none-disability{
+  background:radial-gradient(circle at center,#f0fdf4 0%,#bbf7d0 35%,#14532d 100%);
+}
+
+/* ===== FIELD STYLE ===== */
+.field{
+  position:absolute;
+  width:380px;
+  height:60px;
+  background:rgba(255,255,255,0.15);
+  backdrop-filter:blur(15px) saturate(180%);
+  border-radius:18px;
+  display:grid;
+  grid-template-columns:15% 85%;
+  padding:0 .8rem;
+  align-items:center;
+  box-shadow:
+    0 25px 50px rgba(0,0,0,.3),
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    0 0 0 1px rgba(255,255,255,0.1);
+  transition:all 1.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border:1px solid rgba(255,255,255,0.2);
+}
+
+.field::before{
+  content:'';
+  position:absolute;
+  top:-2px;
+  left:-2px;
+  right:-2px;
+  bottom:-2px;
+  background:linear-gradient(135deg, rgba(240, 147, 251, 0.5), rgba(245, 87, 108, 0.5));
+  border-radius:18px;
+  opacity:0;
+  transition:opacity 0.4s;
+  z-index:-1;
+  filter:blur(8px);
+}
+
+.field:hover::before{
+  opacity:1;
+  animation:rotateBorder 3s linear infinite;
+}
+
+@keyframes rotateBorder{
+  0%{ transform:rotate(0deg); }
+  100%{ transform:rotate(360deg); }
+}
+
+.field i{
+  text-align:center;
+  font-size:1.5rem;
+  color:#000000;
+  filter:drop-shadow(0 0 8px rgba(255,255,255,0.6));
+  animation:iconPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes iconPulse{
+  0%, 100%{ transform:scale(1); }
+  50%{ transform:scale(1.12); }
+}
+
+.field input,.field select{
+  background:none;
+  border:none;
+  outline:none;
+  font-size:1.05rem;
+  color:#ffffff;
+  width:100%;
+  font-weight:500;
+  text-shadow:0 1px 3px rgba(0,0,0,0.3);
+}
+
+.field input::placeholder{
+  color: #000000; /* Solid Black */
+  opacity: 1;     /* Ensures it's fully visible and not transparent */
+  font-weight: 400;
+}
+.field select{
+  cursor:pointer;
+  font-weight:500;
+}
+
+.field select option{
+  background:#667eea;
+  color:black;
+  padding:10px;
+}
+
+/* ===== BUTTON ===== */
+.button{
+  grid-template-columns:100%;
+  justify-content:center;
+  text-align:center;
+  cursor:pointer;
+  font-weight:700;
+  font-size:1.1rem;
+  background:linear-gradient(135deg,#f093fb,#f5576c);
+  color:white;
+  user-select:none;
+  transition:all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position:relative;
+  overflow:hidden;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  text-shadow:0 2px 8px rgba(0,0,0,0.3);
+}
+
+.button::after{
+  content:'';
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:0;
+  height:0;
+  background:rgba(255,255,255,0.3);
+  border-radius:50%;
+  transform:translate(-50%, -50%);
+  transition:width 0.7s, height 0.7s;
+}
+
+.button:hover::after{
+  width:500px;
+  height:500px;
+}
+
+.button:hover{
+  transform:translateY(-5px) scale(1.02);
+  box-shadow:
+    0 30px 60px rgba(240, 147, 251, 0.4),
+    0 0 40px rgba(245, 87, 108, 0.3);
+}
+
+.button:active{
+  transform:translateY(-2px) scale(0.98);
+}
+
+/* ===== DISABILITY BUTTON COLORS ===== */
+body.visual-impairment .button{
+  background:linear-gradient(135deg,#fbbf24,#f59e0b);
+}
+
+body.visual-impairment .button:hover{
+  box-shadow:
+    0 30px 60px rgba(251, 191, 36, 0.4),
+    0 0 40px rgba(245, 158, 11, 0.3);
+}
+
+body.hearing-impairment .button{
+  background:linear-gradient(135deg,#5eead4,#14b8a6);
+}
+
+body.hearing-impairment .button:hover{
+  box-shadow:
+    0 30px 60px rgba(94, 234, 212, 0.4),
+    0 0 40px rgba(20, 184, 166, 0.3);
+}
+
+body.motor-disability .button{
+  background:linear-gradient(135deg,#fb7185,#f43f5e);
+}
+
+body.motor-disability .button:hover{
+  box-shadow:
+    0 30px 60px rgba(251, 113, 133, 0.4),
+    0 0 40px rgba(244, 63, 94, 0.3);
+}
+
+body.cognitive-disability .button{
+  background:linear-gradient(135deg,#c084fc,#a855f7);
+}
+
+body.cognitive-disability .button:hover{
+  box-shadow:
+    0 30px 60px rgba(192, 132, 252, 0.4),
+    0 0 40px rgba(168, 85, 247, 0.3);
+}
+
+body.none-disability .button{
+  background:linear-gradient(135deg,#4ade80,#22c55e);
+}
+
+body.none-disability .button:hover{
+  box-shadow:
+    0 30px 60px rgba(74, 222, 128, 0.4),
+    0 0 40px rgba(34, 197, 94, 0.3);
+}
+
+/* ===== ACTIVE CENTER STACK ===== */
+.active{
+  left: 50% !important;
+  transform: translateX(-50%) translateZ(120px) rotateX(0deg) !important;
+  z-index:100;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+.active[data-pos="1"]{ 
+  top: calc(var(--center-start)) !important;
+  animation:slideIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.active[data-pos="2"]{ 
+  top: calc(var(--center-start) + var(--gap)) !important;
+  animation:slideIn 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.active[data-pos="3"]{ 
+  top: calc(var(--center-start) + var(--gap) * 2) !important;
+  animation:slideIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.active[data-pos="4"]{ 
+  top: calc(var(--center-start) + var(--gap) * 3) !important;
+  animation:slideIn 1.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideIn{
+  from{
+    opacity:0;
+    transform:translateX(-50%) translateZ(-100px) rotateX(60deg) translateY(-150px) scale(0.6);
+  }
+  to{
+    opacity:1;
+    transform:translateX(-50%) translateZ(120px) rotateX(0deg) translateY(0) scale(1);
+  }
+}
+
+/* ===== INACTIVE FLOATING - ENHANCED ===== */
+.inactive{
+  z-index:1;
+  pointer-events:none;
+  opacity:0.3;
+  animation: hypnoticDrift 14s ease-in-out infinite;
+  filter:blur(2px);
+}
+
+@keyframes hypnoticDrift{
+  0%, 100%{ 
+    transform:translate(0, 0) rotate(0deg) scale(0.85) rotateY(0deg); 
+    opacity:0.25;
+  }
+  20%{ 
+    transform:translate(180px, -200px) rotate(90deg) scale(0.95) rotateY(30deg); 
+    opacity:0.35;
+  }
+  40%{ 
+    transform:translate(-150px, 80px) rotate(-70deg) scale(0.75) rotateY(-45deg); 
+    opacity:0.28;
+  }
+  60%{ 
+    transform:translate(200px, 150px) rotate(180deg) scale(1.05) rotateY(20deg); 
+    opacity:0.38;
+  }
+  80%{ 
+    transform:translate(-180px, -120px) rotate(-120deg) scale(0.9) rotateY(-30deg); 
+    opacity:0.32;
+  }
+}
+
+/* ===== SWITCH TEXT ===== */
+.switch-text{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:1rem;
+  z-index:120;
+  color:rgba(0, 0, 0, 0.8);
+  text-align:center;
+  white-space:nowrap;
+  font-weight:500;
+  text-shadow:0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.switch-text.signin{
+  top: calc(var(--center-start) + var(--gap) * 3 + 95px);
+}
+
+.switch-text.signup{
+  top: calc(var(--center-start) + var(--gap) * 4 + 95px);
+}
+
+.switch-text span{
+  color:#000;
+  cursor:pointer;
+  font-weight:700;
+  text-decoration:none;
+  transition:all 0.3s;
+  padding:6px 12px;
+  border-radius:8px;
+  background:rgba(255,255,255,0.15);
+  display:inline-block;
+  margin-left:6px;
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.3);
+  box-shadow:0 4px 15px rgba(0,0,0,0.2);
+}
+
+.switch-text span:hover{
+  background:rgba(255,255,255,0.25);
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(0,0,0,0.3);
+}
+
+/* ===== ACCESSIBILITY ===== */
+.field:focus-within{
+  outline:3px solid rgba(255,255,255,0.6);
+  outline-offset:3px;
+  box-shadow:
+    0 25px 50px rgba(0,0,0,.3),
+    0 0 30px rgba(255,255,255,0.4);
+}
+
+/* ===== ERROR MESSAGE ===== */
+.error-message{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(255,107,107,0.95);
+  color:white;
+  padding:14px 24px;
+  border-radius:12px;
+  font-size:0.95rem;
+  font-weight:600;
+  z-index:150;
+  box-shadow:0 8px 30px rgba(255,107,107,0.4);
+  animation:errorShake 0.6s;
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.3);
+}
+
+.error-message.signin{
+  top: calc(var(--center-start) - 90px);
+}
+
+.error-message.signup{
+  top: calc(var(--center-start) - 90px);
+}
+
+@keyframes errorShake{
+  0%, 100%{ transform:translateX(-50%) translateY(0) rotate(0deg); }
+  20%{ transform:translateX(-50%) translateY(-8px) rotate(-2deg); }
+  40%{ transform:translateX(-50%) translateY(8px) rotate(2deg); }
+  60%{ transform:translateX(-50%) translateY(-6px) rotate(-1deg); }
+  80%{ transform:translateX(-50%) translateY(6px) rotate(1deg); }
+}
+
+/* ===== LOADING SPINNER ===== */
+.loading{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%, -50%);
+  width:70px;
+  height:70px;
+  border:4px solid rgba(255,255,255,0.2);
+  border-top:4px solid #f093fb;
+  border-right:4px solid #f5576c;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  display:none;
+  z-index:200;
+  box-shadow:0 0 30px rgba(240, 147, 251, 0.4);
+}
+
+@keyframes spin{
+  to{ transform:translate(-50%, -50%) rotate(360deg); }
+}
+</style>
+</head>
+
+<body>
+
+<!-- Grid Overlay -->
+<div class="grid-overlay"></div>
+
+<!-- Loading Spinner -->
+<div class="loading"></div>
+
+<!-- ===== SIGN IN FIELDS ===== -->
+<form class="field signin" data-pos="1"><i>👤</i><input name="name" placeholder="Username" tabindex="-1" required></form>
+<form class="field signin" data-pos="2"><i>🔒</i><input name="password" type="password" placeholder="Password" tabindex="-1" required></form>
+<div class="field signin button" data-pos="3" tabindex="-1" onclick="handleSignIn()">Sign In</div>
+
+<div class="error-message signin" style="display:none"></div>
+
+<div class="switch-text signin" style="display:none">
+  Don't have an account? <span onclick="toSignup()">Sign Up</span>
+</div>
+
+<!-- ===== SIGN UP FIELDS ===== -->
+<form class="field signup"><i>👤</i><input name="name" placeholder="Username" tabindex="-1" required></form>
+<form class="field signup"><i>🔒</i><input name="password" type="password" placeholder="Password" tabindex="-1" required></form>
+<form class="field signup"><i>♿</i>
+  <select name="disability" tabindex="-1" required>
+    <option value="">Select Disability Type</option>
+    <option>Visual Impairment</option>
+    <option>Hearing Impairment</option>
+    <option>Motor Disability</option>
+    <option>Cognitive Disability</option>
+    <option>None</option>
+  </select>
+</form>
+<div class="field signup button" tabindex="-1" onclick="handleSignUp()">Sign Up</div>
+
+<div class="error-message signup" style="display:none"></div>
+
+<div class="switch-text signup" style="display:none">
+  Already have an account? <span onclick="toSignin()">Sign In</span>
+</div>
+
+<script>
+// Create particles
+function createParticles(){
+  for(let i = 0; i < 50; i++){
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.top = Math.random() * 100 + '%';
+    particle.style.animationDelay = Math.random() * 15 + 's';
+    particle.style.animationDuration = (12 + Math.random() * 8) + 's';
+    document.body.appendChild(particle);
+  }
+}
+
+// Create floating shapes
+function createShapes(){
+  const shapes = ['circle', 'square'];
+  for(let i = 0; i < 10; i++){
+    const shape = document.createElement('div');
+    shape.className = 'shape ' + shapes[Math.floor(Math.random() * shapes.length)];
+    shape.style.left = Math.random() * 100 + '%';
+    shape.style.top = Math.random() * 100 + '%';
+    shape.style.animationDelay = Math.random() * 20 + 's';
+    shape.style.animationDuration = (15 + Math.random() * 10) + 's';
+    document.body.appendChild(shape);
+  }
+}
+
+createParticles();
+createShapes();
+
+const signinFields = document.querySelectorAll('.field.signin');
+const signupFields = document.querySelectorAll('.field.signup');
+const signinText = document.querySelector('.switch-text.signin');
+const signupText = document.querySelector('.switch-text.signup');
+const disabilitySelect = document.querySelector('.signup select');
+const loadingSpinner = document.querySelector('.loading');
+
+// Error handling
+function showError(message, type) {
+  const errorDiv = document.querySelector(`.error-message.${type}`);
+  errorDiv.textContent = message;
+  errorDiv.style.display = 'block';
+  setTimeout(() => {
+    errorDiv.style.display = 'none';
+  }, 3500);
+}
+
+// Show loading
+function showLoading(show){
+  loadingSpinner.style.display = show ? 'block' : 'none';
+}
+
+// Handle Sign In
+async function handleSignIn() {
+  const username = document.querySelector('.field.signin input[name="name"]').value;
+  const password = document.querySelector('.field.signin input[name="password"]').value;
+  
+  if (!username || !password) {
+    showError('Please fill in all fields', 'signin');
+    return;
+  }
+  
+  showLoading(true);
+  
+  const formData = new FormData();
+  formData.append('name', username);
+  formData.append('password', password);
+  
+  try {
+    const response = await fetch('/login', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    showLoading(false);
+    
+    if (data.success) {
+      window.location.href = data.redirect;
+    } else {
+      showError(data.error || 'Login failed', 'signin');
+    }
+  } catch (error) {
+    showLoading(false);
+    showError('Connection error. Please try again.', 'signin');
+  }
+}
+
+// Handle Sign Up
+async function handleSignUp() {
+  const username = document.querySelector('.field.signup input[name="name"]').value;
+  const password = document.querySelector('.field.signup input[name="password"]').value;
+  const disability = document.querySelector('.field.signup select[name="disability"]').value;
+  
+  if (!username || !password || !disability) {
+    showError('Please fill in all fields', 'signup');
+    return;
+  }
+  
+  showLoading(true);
+  
+  const formData = new FormData();
+  formData.append('name', username);
+  formData.append('password', password);
+  formData.append('disability', disability);
+  
+  try {
+    const response = await fetch('/signup', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    showLoading(false);
+    
+    if (data.success) {
+      window.location.href = data.redirect;
+    } else {
+      showError(data.error || 'Signup failed', 'signup');
+    }
+  } catch (error) {
+    showLoading(false);
+    showError('Connection error. Please try again.', 'signup');
+  }
+}
+
+// Handle Enter key press
+document.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    const activeSignin = document.querySelector('.field.signin.active');
+    const activeSignup = document.querySelector('.field.signup.active');
+    
+    if (activeSignin) {
+      handleSignIn();
+    } else if (activeSignup) {
+      handleSignUp();
+    }
+  }
+});
+
+// Handle disability selection color change
+disabilitySelect.addEventListener('change', function(e){
+  const value = e.target.value;
+  const body = document.body;
+  
+  // Remove all disability classes
+  body.classList.remove('visual-impairment', 'hearing-impairment', 'motor-disability', 'cognitive-disability', 'none-disability');
+  
+  // Add appropriate class based on selection
+  if(value === 'Visual Impairment'){
+    body.classList.add('visual-impairment');
+  } else if(value === 'Hearing Impairment'){
+    body.classList.add('hearing-impairment');
+  } else if(value === 'Motor Disability'){
+    body.classList.add('motor-disability');
+  } else if(value === 'Cognitive Disability'){
+    body.classList.add('cognitive-disability');
+  } else if(value === 'None'){
+    body.classList.add('none-disability');
+  }
+});
+
+// Generate random floating position with dramatic movement
+function floatAway(el){
+  const angle = Math.random() * Math.PI * 2;
+  const distance = 400 + Math.random() * 600;
+  const x = Math.cos(angle) * distance;
+  const y = Math.sin(angle) * distance;
+  const rotation = (Math.random() - 0.5) * 360;
+  
+  el.classList.remove('active');
+  el.classList.add('inactive');
+  el.style.left = `calc(50% + ${x}px)`;
+  el.style.top = `calc(50% + ${y}px)`;
+  el.style.transform = `rotate(${rotation}deg) scale(0.85)`;
+  el.style.animationDelay = `${Math.random() * 3}s`;
+  
+  // Lock keyboard focus
+  const inputs = el.querySelectorAll('input, select');
+  inputs.forEach(input => input.tabIndex = -1);
+  if(el.classList.contains('button')) el.tabIndex = -1;
+}
+
+// Activate center stack
+function activate(fields, switchText){
+  fields.forEach((el, i) => {
+    el.classList.remove('inactive');
+    el.classList.add('active');
+    el.dataset.pos = i + 1;
+    el.style.left = '50%';
+    el.style.animationDelay = '0s';
+    
+    // Enable keyboard focus
+    const inputs = el.querySelectorAll('input, select');
+    inputs.forEach(input => input.tabIndex = 0);
+    if(el.classList.contains('button')) el.tabIndex = 0;
+  });
+  
+  switchText.style.display = 'block';
+}
+
+// Deactivate and float away
+function deactivate(fields, switchText){
+  fields.forEach(el => {
+    floatAway(el);
+  });
+  switchText.style.display = 'none';
+}
+
+// Initialize: Sign In active, Sign Up floating
+function init(){
+  deactivate(signupFields, signupText);
+  activate(signinFields, signinText);
+}
+
+// Switch to Sign Up
+function toSignup(){
+  deactivate(signinFields, signinText);
+  setTimeout(() => {
+    activate(signupFields, signupText);
+  }, 200);
+}
+
+// Switch to Sign In
+function toSignin(){
+  deactivate(signupFields, signupText);
+  setTimeout(() => {
+    activate(signinFields, signinText);
+  }, 200);
+}
+
+// Run on load
+init();
+</script>
+</body>
+</html>
